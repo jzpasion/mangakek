@@ -1,129 +1,124 @@
-import { StyleSheet, Button, ScrollView, ImageBackground } from "react-native";
+import {
+  StyleSheet,
+  Button,
+  ScrollView,
+  ImageBackground,
+  ActivityIndicator,
+  Dimensions,
+} from "react-native";
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import EditScreenInfo from "../../components/EditScreenInfo";
 import { Text, View } from "../../components/Themed";
-import { SafeAreaView } from "react-native-safe-area-context";
-const baseUrl = "https://api.mangadex.org/";
-
+import { responsiveHeight, responsiveWidth } from "../utils/utils";
+const baseUrl = "http://localhost:3000/mangakek";
+let ScreenHeight = Dimensions.get("window").height;
 export default function TabOneScreen() {
-  const [getMangaItems, setMangaItems] = useState();
-  const [getTitles, setTiles] = useState([]);
-  const [getCoverArt, setCoverArt] = useState("");
-  const [testData, setTestData] = useState([]);
+  let [isLoading, setIsLoading] = useState(true);
+  let [error, setError] = useState();
+  let [getMangaItems, setMangaItems] = useState([]);
 
   const test = () => {
-    getCover();
-    // console.log(getTitles);
+    getData();
   };
 
   const getData = async () => {
-    axios({
-      method: "get",
-      url: `${baseUrl}/manga?limit=30`,
-    }).then((response) => {
-      setMangaItems(response.data.data);
-      setTiles(response.data.data);
-    });
-  };
-
-  const getCover = async () => {
-    var newData: any = [];
-    getTitles.forEach((item: any) => {
-      var cover_art = item.relationships.find(
-        (rel: any) => rel.type === "cover_art"
+    fetch(
+      `${baseUrl}/manga?limit=90&excludedTags[]=5920b825-4181-4a17-beeb-9918b0ff7a30`
+    )
+      .then((res) => res.json())
+      .then(
+        (result) => {
+          setIsLoading(false);
+          setMangaItems(result.data);
+        },
+        (error) => {
+          setIsLoading(false);
+          setError(error);
+        }
       );
-      axios.get(`${baseUrl}/cover/${cover_art.id}`).then((data) => {
-        newData.push({
-          ...item,
-          uri: `https://uploads.mangadex.org/covers/${item.id}/${data.data.data.attributes.fileName}.256.jpg`,
-        });
-      });
-    });
-    console.log(newData);
-
-    setTiles(newData);
   };
 
-  useEffect(() => {
-    getData();
-    getCover();
-  }, []);
-  const Items = () => {
+  const getContent = () => {
+    if (isLoading) {
+      return <ActivityIndicator size="large" />;
+    }
+
+    if (error) {
+      return <Text>{error}</Text>;
+    }
+
+    console.log(getMangaItems);
     return (
       <View style={styles.itemContainer}>
-        {getTitles.map((item, key) => {
+        {getMangaItems.map((item, key) => {
           return (
-            <View key={key} style={styles.item}>
+            <View key={key} style={styles.itemStyle}>
               <ImageBackground
                 source={item.uri}
                 resizeMode="cover"
-                style={styles.img_content}
+                style={styles.imgContent}
               ></ImageBackground>
-              <View style={styles.content}></View>
+              <View style={styles.content}>
+                <Text
+                  ellipsizeMode="tail"
+                  numberOfLines={2}
+                  style={styles.contentText}
+                >
+                  {item.title}
+                </Text>
+              </View>
             </View>
           );
         })}
       </View>
     );
   };
+
+  useEffect(() => {
+    getData();
+  }, []);
+
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView style={styles.scrollView}>
-        <Button
-          onPress={test}
-          title="Learn More"
-          color="#841584"
-          accessibilityLabel="Learn more about this purple button"
-        />
-        <Items></Items>
-        {/* {getTitles.map((item, key) => {
-        return <Text key={key}>{item.attributes.title.en}</Text>;
-      })} */}
-        {/* <FlatList
-        data={getMangaItems}
-        style={styles.container}
-        renderItem={({ item }) => (
-          <Text style={styles.title}>{item.attributes.title.en}</Text>
-        )}
-        keyExtractor={(item) => item.id}
-        numColumns={10}
-      /> */}
-      </ScrollView>
-    </SafeAreaView>
+    <ScrollView style={styles.scrollView}>
+      <Button
+        onPress={test}
+        title="Learn More"
+        color="#841584"
+        accessibilityLabel="Learn more about this purple button"
+      />
+      {getContent()}
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
+  container: {},
   title: {
     fontSize: 20,
     fontWeight: "bold",
   },
   itemContainer: {
-    width: "100%",
-    height: "85%",
+    flex: 1,
     padding: 5,
     flexDirection: "row",
     flexWrap: "wrap",
-    backgroundColor: "orange",
+    // backgroundColor: "red",
+    height: ScreenHeight,
   },
-  item: {
-    width: "29%",
-    height: "100%",
+  itemStyle: {
+    width: responsiveWidth(118),
+    height: responsiveHeight(200),
     padding: 1,
     backgroundColor: "green",
-    borderRadius: 15,
+    borderRadius: 8,
     margin: "2%",
   },
-  img_content: {
+  imgContent: {
     flex: 5,
     alignItems: "center",
     backgroundColor: "white",
-    borderTopLeftRadius: 15,
-    borderTopRightRadius: 15,
+    borderTopLeftRadius: 8,
+    borderTopRightRadius: 8,
     flexWrap: "wrap",
     width: "100%",
     height: "100%",
@@ -131,13 +126,17 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    backgroundColor: "blue",
     flexWrap: "wrap",
-    borderBottomLeftRadius: 15,
-    borderBottomRightRadius: 15,
+    borderBottomLeftRadius: 8,
+    borderBottomRightRadius: 8,
+    justifyContent: "space-evenly",
+    flexDirection: "row",
+    paddingHorizontal: "2%",
   },
-  scrollView: {
-    marginHorizontal: 20,
-    backgroundColor: "red",
+  scrollView: { flex: 1 },
+  contentText: {
+    fontWeight: "bold",
+    fontSize: 10,
+    color: "#444",
   },
 });
