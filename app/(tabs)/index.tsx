@@ -7,7 +7,6 @@ import {
   Dimensions,
 } from "react-native";
 import React, { useEffect, useState } from "react";
-import axios from "axios";
 import { Text, View } from "../../components/Themed";
 import { responsiveHeight, responsiveWidth } from "../utils/utils";
 const baseUrl = "http://localhost:3000/mangakek";
@@ -57,16 +56,26 @@ export default function TabOneScreen() {
                 source={item.uri}
                 resizeMode="cover"
                 style={styles.imgContent}
-              ></ImageBackground>
-              <View style={styles.content}>
+              >
+                <View style={styles.content}>
+                  <Text
+                    ellipsizeMode="tail"
+                    numberOfLines={2}
+                    style={styles.contentText}
+                  >
+                    {item.title}
+                  </Text>
+                </View>
+              </ImageBackground>
+              {/* <View style={styles.content}>
                 <Text
                   ellipsizeMode="tail"
-                  numberOfLines={2}
+                  numberOfLines={1}
                   style={styles.contentText}
                 >
                   {item.title}
                 </Text>
-              </View>
+              </View> */}
             </View>
           );
         })}
@@ -90,6 +99,20 @@ export default function TabOneScreen() {
     </ScrollView>
   );
 }
+const hexToRgbA = (hex: string, opacity: number) => {
+  let c;
+  if (/^#([A-Fa-f0-9]{3}){1,2}$/.test(hex)) {
+    c = hex.substring(1).split("");
+    if (c.length === 3) {
+      c = [c[0], c[0], c[1], c[1], c[2], c[2]];
+    }
+    c = `0x${c.join("")}`;
+    return `rgba(${[(c >> 16) & 255, (c >> 8) & 255, c & 255].join(
+      ","
+    )},${opacity})`;
+  }
+  throw new Error("Bad Hex");
+};
 
 const styles = StyleSheet.create({
   container: {},
@@ -104,6 +127,7 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
     // backgroundColor: "red",
     height: ScreenHeight,
+    position: "relative",
   },
   itemStyle: {
     width: responsiveWidth(118),
@@ -112,31 +136,31 @@ const styles = StyleSheet.create({
     backgroundColor: "green",
     borderRadius: 8,
     margin: "2%",
+    overflow: "hidden",
   },
   imgContent: {
     flex: 5,
     alignItems: "center",
-    backgroundColor: "white",
     borderTopLeftRadius: 8,
     borderTopRightRadius: 8,
     flexWrap: "wrap",
     width: "100%",
     height: "100%",
     overflow: "hidden",
+    justifyContent: "flex-end",
   },
   content: {
-    flex: 1,
     flexWrap: "wrap",
-    borderBottomLeftRadius: 8,
-    borderBottomRightRadius: 8,
     justifyContent: "space-evenly",
     flexDirection: "row",
-    paddingHorizontal: "2%",
+    padding: "2%",
+    width: "100%",
+    backgroundColor: hexToRgbA("#000000", 0.5),
   },
   scrollView: { flex: 1 },
   contentText: {
     fontWeight: "bold",
-    fontSize: 10,
-    color: "#444",
+    fontSize: 11,
+    color: "#fff",
   },
 });
